@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation'; // ✅ App Router
+import { toast } from 'react-toastify';
 
 
 export default function Login() {
@@ -28,12 +29,15 @@ export default function Login() {
       });
 
       const data = await res.json();
-console.log(data)
+      console.log(data)
+
       if (res.ok) {
+        localStorage.setItem('authToken', data.token);
+      toast.success("Login Success");
         setMsg('Login successful');
-        router.push('/producthome'); // Redirect to login page
+        router.push('/dashboard'); // Redirect to login page
       } else {
-        setMsg(data.error || 'Signup failed');
+        setMsg(data.error || toast.danger('Login failed'));
       }
     } catch (err) {
       console.error(err);
@@ -57,6 +61,7 @@ console.log(data)
             className="w-full border border-gray-300 rounded px-3 py-2"
             placeholder="Enter email"
             value={email}
+            pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
             onChange={(e) => setEmail(e.target.value)}
             required
           />

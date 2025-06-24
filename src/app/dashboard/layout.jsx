@@ -1,8 +1,19 @@
-'use client'
-import Link from 'next/link'
-import React from 'react'
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // ✅ Import
+import { toast } from 'react-toastify';
 
 export default function DashboardLayout({ children }) {
+  const router = useRouter(); // ✅ Define router
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    router.push('/login'); // ✅ Now this works
+    toast.success('Logged out successfully');
+  };
+
   return (
     <div className='flex min-h-screen'>
       {/* Sidebar */}
@@ -11,6 +22,13 @@ export default function DashboardLayout({ children }) {
         <Link href="/dashboard" className="block text-decoration-none">🏠 Home</Link>
         <Link href="/dashboard/producthome" className="block text-decoration-none">📦 Products</Link>
         <Link href="/dashboard/addProduct" className="block text-decoration-none">➕ Add Product</Link>
+        <Link href="/dashboard/setting" className="block text-decoration-none"> ⚙️ Setting</Link>
+        <span
+          onClick={handleLogout}
+          className="block text-decoration-none cursor-pointer text-red-600 hover:underline"
+        >
+          🚪 Log Out
+        </span>
       </div>
 
       {/* Main Content */}
@@ -18,5 +36,5 @@ export default function DashboardLayout({ children }) {
         {children}
       </main>
     </div>
-  )
+  );
 }

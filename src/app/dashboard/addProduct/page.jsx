@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState } from 'react';
+import {toast}  from 'react-toastify'
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
   const [formData, setFormData] = useState({
@@ -21,11 +23,13 @@ export default function Page() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form Submitted:', formData);
-
+    const token  = localStorage.getItem("authToken")
     try {
       const res = await fetch('http://localhost:5000/products/api/addproduct', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          authtoken:token,
+         },
         body: JSON.stringify(formData),
       });
 
@@ -33,7 +37,8 @@ export default function Page() {
       console.log(data);
 
       if (res.ok) {
-        alert('Product added successfully!');
+        toast.success('Product added successfully!');
+        
         setFormData({
           name: '',
           category: '',
@@ -41,11 +46,12 @@ export default function Page() {
           stockCount: '',
           status: 'In Stock',
         });
+
       } else {
-        alert(data.error || 'Something went wrong');
+        toast.warn(data.error || 'Something went wrong');
       }
     } catch (err) {
-      alert('Server error');
+      toast.info('Server error');
       console.error(err);
     }
   };
@@ -82,25 +88,33 @@ export default function Page() {
         <div>
           <label className="block mb-1 font-medium">Price (₹)</label>
           <input
-            name="price"
-            type="number"
-            value={formData.price}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded-md"
-            required
-          />
+  name="price"
+  type="text"
+  value={formData.price}
+  onChange={(e) => {
+    const onlyNums = e.target.value.replace(/[^0-9]/g, '');
+    handleChange({ target: { name: 'price', value: onlyNums } });
+  }}
+  className="w-full border px-3 py-2 rounded-md"
+  required
+/>
+
         </div>
 
         <div>
           <label className="block mb-1 font-medium">Stock Count</label>
-          <input
-            name="stockCount"
-            type="number"
-            value={formData.stockCount}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded-md"
-            required
-          />
+         <input
+  name="stockCount"
+  type="text"
+  value={formData.stockCount}
+  onChange={(e) => {
+    const onlyDigits = e.target.value.replace(/[^0-9]/g, '');
+    handleChange({ target: { name: 'stockCount', value: onlyDigits } });
+  }}
+  className="w-full border px-3 py-2 rounded-md"
+  required
+/>
+
         </div>
 
         <div>

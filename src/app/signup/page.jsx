@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify'; // ✅ Correct named import
+
 
 export default function Signup() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function Signup() {
 
     if (!email || !password) {
       setMsg('Please enter email and password');
+      toast.warn('Please enter email and password');
       return;
     }
 
@@ -30,8 +33,10 @@ export default function Signup() {
 console.log(data)
       if (res.ok) {
         setMsg('Signup successful');
+        toast.success("Signup Sucessful")
         router.push('/login'); // Redirect to login page
       } else {
+        toast.warn(data.error)
         setMsg(data.error || 'Signup failed');
       }
     } catch (err) {
@@ -56,6 +61,7 @@ console.log(data)
             className="w-full border border-gray-300 rounded px-3 py-2"
             placeholder="Enter email"
             value={email}
+            pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
             onChange={(e) => setEmail(e.target.value)}
             required
           />
