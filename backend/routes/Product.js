@@ -96,10 +96,12 @@ router.put('/:id', fetchuser, async (req, res) => {
   }
 });
 
-// Delete product
+
 router.delete('/:id', fetchuser, async (req, res) => {
   try {
+    
     const product = await Product.findById(req.params.id);
+    
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     if (product.user.toString() !== req.user.id) {
@@ -108,22 +110,43 @@ router.delete('/:id', fetchuser, async (req, res) => {
 
     await Product.findByIdAndDelete(req.params.id);
 
+    // Get socket.io and connected users map from app locals
     const io = req.app.get('io');
     const connectedUsers = req.app.get('connectedUsers');
+console.log("Connected Users Map Keys:", [...connectedUsers.keys()]);
 
+    // Notify product owner directly
+    const ownerSocket = connectedUsers.get(req.user.id.toString()); // Force string key
+    console.log("Owner Socket:", ownerSocket);
+
+    if (ownerSocket?.socketId) {
+      io.to(ownerSocket.socketId).emit('product-deleted', req.params.id);
+    }
+
+    // Optionally notify others with realtimeEnabled = true
     for (const [userId, { socketId }] of connectedUsers.entries()) {
-      const isOwner = userId === req.user.id;
-      const user = await User.findById(userId);
-      if (isOwner || user?.realtimeEnabled) {
+      const userIdStr = userId.toString();
+      const isOwner = userIdStr === req.user.id;
+
+      // Skip owner (already notified above)
+      if (isOwner) continue;
+
+      const user = await User.findById(userIdStr);
+      if (user?.realtimeEnabled && socketId) {
         io.to(socketId).emit('product-deleted', req.params.id);
       }
     }
 
     res.json({ message: 'Product deleted successfully' });
   } catch (err) {
+    console.error(err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
+// Delete product
+
 
 // Delete multiple products
 router.post('/delete-multiple', fetchuser, async (req, res) => {

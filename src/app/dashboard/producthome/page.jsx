@@ -26,23 +26,21 @@ useEffect(() => {
   fetchProducts();
 
   const token = localStorage.getItem('authToken');
-  if (!token) {
-    console.warn('authToken not found in localStorage');
-    toast.danger("authToken not found in localStorage")
-    return;
-  }
+  if (!token) return;
 
   let currentUserId = null;
-
   try {
     const decoded = JSON.parse(atob(token.split('.')[1]));
     currentUserId = decoded.id;
+
+    // ✅ Tell server who the user is
+    socket.emit('user-connected', currentUserId);
   } catch (err) {
     console.error('Failed to decode token:', err.message);
     return;
   }
 
-  // Socket event listeners (scoped inside only if token is valid)
+  // Socket listeners
   socket.on('product-added', (newProduct) => {
     if (newProduct.user === currentUserId) {
       setProducts(prev => [newProduct, ...prev]);
@@ -58,10 +56,10 @@ useEffect(() => {
   });
 
   socket.on('product-deleted', (deletedId) => {
+    console.log('Received product-deleted for:', deletedId); // ✅
     setProducts(prev => prev.filter(p => p._id !== deletedId));
   });
 
-  // Clean up on unmount
   return () => {
     socket.off('product-added');
     socket.off('product-updated');
